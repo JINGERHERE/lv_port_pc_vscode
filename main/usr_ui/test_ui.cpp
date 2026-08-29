@@ -2,6 +2,8 @@
 
 #include "lvgl.h"
 
+#include "usr_assets.h"
+
 void my_gui() {
     lv_obj_t* switch_obj = lv_switch_create(lv_scr_act());
     lv_obj_set_size(switch_obj, 120, 60);
@@ -33,4 +35,10 @@ void round_gui() {
     lv_obj_t* label = lv_label_create(btn);
     lv_label_set_text(label, "Hello");
     lv_obj_center(label);
+}
+
+void img_gui() {
+    lv_obj_t* img = lv_image_create(lv_scr_act());
+    lv_image_set_src(img, usr_find_asset("esp_logo.png"));
+    lv_obj_center(img);
 }
