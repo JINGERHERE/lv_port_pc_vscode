@@ -8,6 +8,11 @@ ui/
 # Ignore all dot folders, with below exceptions
 .*/
 
-# VSCode
-.vscode
+# usrs
 .DS_Store
+
+# VSCode
+.vscode/
+
+# vcpkg
+vcpkg_installed/

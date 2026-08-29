@@ -1,6 +1,10 @@
-# LVGL 模拟器 VS Code
+# VSCode Simulator project for LVGL
 
-### macOS
+## 分支切换
+切换分支后若上游仓库未切换至指定版本，使用`git submodule update --init --recursive` 将所有 submodule 同步到正确的 commit
+
+
+## macOS
 
 - **安装必要依赖项**
 1. macOS (Homebrew): `brew install sdl2 cmake make llvm`
@@ -18,31 +22,62 @@
         3. `CMakeLists.txt`: 修改`target_include_directories(lvgl PUBLIC ${PROJECT_SOURCE_DIR} ${SDL2_INCLUDE_DIRS})` 为 `target_include_directories(lvgl SYSTEM PUBLIC $<BUILD_INTERFACE:${SDL2_INCLUDE_DIRS}>)`
 
 
-- **添加用户 UI**
-    - 在固定目录下添加 ui 目录：`main/usr_ui`
-    - 在 `main/usr_ui` 目录下`CmakeLists.txt`（根据实际结构调整）：
 
-        ```cmake
-        # 自动添加源文件
-        file(GLOB USR_SOURCES *.c *.cpp)
-        file(GLOB USR_PRIV_SOURCES private/*.c private/*.cpp)
+## Windows x64
 
-        # 编译成静态库
-        add_library(usr_ui STATIC ${USR_SOURCES} ${USR_PRIV_SOURCES})
+- **安装必要依赖项**
 
-        # 头文件目录
-        target_include_directories(usr_ui
-            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include
-            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/priv_include
-        )
-
-        # 链接 LVGL 库
-        target_link_libraries(usr_ui PUBLIC lvgl)
-        ```
-
-    - 根目录`CMakeLists.txt` 添加：`add_subdirectory(${PROJECT_SOURCE_DIR}/main/usr_ui)`，约 90 行之后
-    - 根目录`CMakeLists.txt` 修改：`target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread)` 为 `target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread usr_ui)`，即追加链接 usr_ui 库
+1. 安装 `MinGW`：https://github.com/niXman/mingw-builds-binaries/releases/latest 选择 `x86_64_***_ucrt` 版本，解压后添加到环境变量 `PATH` 中
 
 
-- **切换分支**
-    - 切换分支后同步上游仓库：`git submodule update --init --recursive` 将所有 submodule 同步到正确的 commit
+2. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.bat`安装 vcpkg。（按需使用`vcpkg integrate install`安装 MSBuild / Visual Studio 的全局集成，让 VS 打开的所有 MSBuild 工程自动找到 vcpkg 的库）
+
+3. 新建 `./.vscode/settings.json`，添加内容（`DCMAKE_TOOLCHAIN_FILE`加载 vcpkg 工具链；通过`DVCPKG_TARGET_TRIPLET`和`DVCPKG_HOST_TRIPLET`明确安装的 ABI 版本和 ABI 构建类型）：
+```json
+{
+    "cmake.generator": "MinGW Makefiles",
+    "cmake.configureArgs": [
+        "-DCMAKE_TOOLCHAIN_FILE=D:/DEV/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic",
+        "-DVCPKG_HOST_TRIPLET=x64-mingw-dynamic"
+    ]
+}
+```
+若需要静态链接 SDL2，则修改`"-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic"`为`"-DVCPKG_TARGET_TRIPLET=x64-mingw-static"`
+
+4. 新建 `./vcpkg.json`，添加内容：
+```json
+{
+    "name": "lv-port-pc-vscode",
+    "version-string": "1.0.0",
+    "dependencies": ["sdl2"]
+}
+
+```
+
+## 添加用户 UI
+- 在固定目录下添加 ui 目录：`main/usr_ui`
+
+- 在 `main/usr_ui` 目录下`CmakeLists.txt`（根据实际结构调整）：
+
+    ```cmake
+    # 自动添加源文件
+    file(GLOB USR_SOURCES *.c *.cpp)
+    file(GLOB USR_PRIV_SOURCES private/*.c private/*.cpp)
+
+    # 编译成静态库
+    add_library(usr_ui STATIC ${USR_SOURCES} ${USR_PRIV_SOURCES})
+
+    # 头文件目录
+    target_include_directories(usr_ui
+        PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/priv_include
+    )
+
+    # 链接 LVGL 库
+    target_link_libraries(usr_ui PUBLIC lvgl)
+    ```
+
+- 根目录`CMakeLists.txt` 添加：`add_subdirectory(${PROJECT_SOURCE_DIR}/main/usr_ui)`，约 90 行之后
+
+- 根目录`CMakeLists.txt` 修改：`target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread)` 为 `target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread usr_ui)`，即追加链接 usr_ui 库

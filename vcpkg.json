@@ -1,0 +1,5 @@
+{
+    "name": "lv-port-pc-vscode",
+    "version-string": "1.0.0",
+    "dependencies": ["sdl2"]
+}
