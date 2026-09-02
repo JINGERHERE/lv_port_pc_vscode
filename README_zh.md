@@ -18,7 +18,7 @@
 - **macOS**
     1. Homebrew安装必要依赖项：`brew install cmake make llvm`（系统自带 Apple clang 版本较低，预设显式使用 brew llvm 的 clang，路径 `/opt/homebrew/opt/llvm/bin/clang` 已写死在预设中，无需改 PATH）
     2. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.sh`下载 vcpkg 二进制文件。
-    3. `~/.zshrc` 中添加 `export VCPKG_ROOT=<vcpkg目录路径>`
+    3. `~/.zshrc` 中添加 `export VCPKG_ROOT=<vcpkg目录路径>`，`export PATH="$VCPKG_ROOT:$PATH"`
 
 - **windows x64**
     1. 安装 cmake：https://cmake.org/download/
@@ -28,7 +28,7 @@
 - **linux x64**
     1. 安装必要依赖项：`sudo apt update && sudo apt install -y build-essential cmake clang`
     2. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.sh`下载 vcpkg 二进制文件。
-    3. `~/.bashrc` 中添加 `export VCPKG_ROOT=<vcpkg目录路径>`
+    3. `~/.bashrc` 中添加 `export VCPKG_ROOT=<vcpkg目录路径>`，`export PATH="$VCPKG_ROOT:$PATH"`
 
 
 ## vcpkg.json
