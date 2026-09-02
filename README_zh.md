@@ -1,51 +1,38 @@
 # VSCode Simulator project for LVGL
 
-## 分支切换
-切换分支后若上游仓库未切换至指定版本，使用`git submodule update --init --recursive` 将所有 submodule 同步到正确的 commit
+
+## 说明
+本项目代码基于 **GCC 兼容工具链 + POSIX 接口**开发：链接 `pthread`、`m` 等 POSIX 库（FreeRTOS 使用 `GCC_POSIX` port），编译选项为 GNU 风格。Linux/macOS 原生满足，Windows 由 MinGW 补齐——因此在新的平台按「安装编译环境」装好工具链后即可直接编译。各平台编译参数统一由随仓库提交的 `CMakePresets.json` 管理：
+
+- `CMakePresets.json`：定义三平台预设 `win-mingw` / `mac-clang` / `linux-clang`（生成器、编译器、triplet、编译类型、产物目录），通过 `${hostSystemName}` 条件自动只显示当前平台可用的预设
+- **环境变量 `VCPKG_ROOT`**：每台机器设置一次，预设内通过 `$env{VCPKG_ROOT}` 引用 vcpkg 工具链，仓库文件中不出现绝对路径
+- **编译类型不能留空**（仅影响 Windows 动态链接）：空编译类型会使链接端选中 debug 库（`SDL2d.dll`）、applocal 却去 release 目录找依赖，两边错位导致运行时找不到 DLL，故预设显式指定 `CMAKE_BUILD_TYPE=Release`
+- **分支切换**：切换分支后若上游仓库未切换至指定版本，使用`git submodule update --init --recursive` 将所有 submodule 同步到正确的 commit
+- **链接类型**：修改`CMakePresets.json`，`"VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"`为动态链接，`"VCPKG_TARGET_TRIPLET": "x64-mingw-static"`为静态链接
 
 
-## macOS
+## 安装编译环境
 
-- **安装必要依赖项**
-1. macOS (Homebrew): `brew install sdl2 cmake make llvm`
+通用要求：CMake ≥ 3.21（`CMakePresets.json` 使用 version 3 架构）、VSCode 安装 CMake Tools 插件
 
-2. VSCode: cmd+shift+p and run `Cmake: select a kit`, then `[Scan for kits]`
+- **macOS**
+    1. Homebrew安装必要依赖项：`brew install cmake make llvm`（系统自带 Apple clang 版本较低，预设显式使用 brew llvm 的 clang，路径 `/opt/homebrew/opt/llvm/bin/clang` 已写死在预设中，无需改 PATH）
+    2. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.sh`下载 vcpkg 二进制文件。
+    3. `~/.zshrc` 中添加 `export VCPKG_ROOT=<vcpkg目录路径>`
 
-3. VSCode: then cmd+shift+p and run `Cmake: select a kit`, select the version of clang you just installed from homebrew (it should say `Using compilers C=/opt/homebrew/opt/llvm/bin/clang ...`).**其实就是选择 brew 安装的 clang，系统自带的 clang 版本较低。**
+- **windows x64**
+    1. 安装 cmake：https://cmake.org/download/
+    2. 安装 `MinGW`：https://github.com/niXman/mingw-builds-binaries/releases/latest 选择 `x86_64_***_ucrt` 版本，解压后添加到环境变量 `PATH` 中
+    3. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.bat`下载 vcpkg 二进制文件。添加系统环境变量`VCPKG_ROOT`，值为`D:/DEV/vcpkg`，`PATH`中添加`%VCPKG_ROOT%`
 
-
-- **编译报错修改项**
-    - 当前分支（release/v9.5）可直接编译运行
-    - main 分支编译报错需修改（release 分支一般都能直接编译，main 分支不一定）:
-        1. `lv_conf.h`: 修改 `#define LV_USE_SDL2 1`，启用 ThorVG库对矢量图形的支持
-        2. `lv_conf.h`: 修改 `#define LV_SDL_INCLUDE_PATH "SDL2/SDL.h"` 为 `#define LV_SDL_INCLUDE_PATH "SDL.h"`
-        3. `CMakeLists.txt`: 修改`target_include_directories(lvgl PUBLIC ${PROJECT_SOURCE_DIR} ${SDL2_INCLUDE_DIRS})` 为 `target_include_directories(lvgl SYSTEM PUBLIC $<BUILD_INTERFACE:${SDL2_INCLUDE_DIRS}>)`
-
-
-
-## Windows x64
-
-- **安装必要依赖项**
-
-1. 安装 `MinGW`：https://github.com/niXman/mingw-builds-binaries/releases/latest 选择 `x86_64_***_ucrt` 版本，解压后添加到环境变量 `PATH` 中
+- **linux x64**
+    1. 安装必要依赖项：`sudo apt update && sudo apt install -y build-essential cmake clang`
+    2. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.sh`下载 vcpkg 二进制文件。
+    3. `~/.bashrc` 中添加 `export VCPKG_ROOT=<vcpkg目录路径>`
 
 
-2. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.bat`安装 vcpkg。（按需使用`vcpkg integrate install`安装 MSBuild / Visual Studio 的全局集成，让 VS 打开的所有 MSBuild 工程自动找到 vcpkg 的库）
-
-3. 新建 `./.vscode/settings.json`，添加内容（`DCMAKE_TOOLCHAIN_FILE`加载 vcpkg 工具链；通过`DVCPKG_TARGET_TRIPLET`和`DVCPKG_HOST_TRIPLET`明确安装的 ABI 版本和 ABI 构建类型）：
-```json
-{
-    "cmake.generator": "MinGW Makefiles",
-    "cmake.configureArgs": [
-        "-DCMAKE_TOOLCHAIN_FILE=D:/DEV/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic",
-        "-DVCPKG_HOST_TRIPLET=x64-mingw-dynamic"
-    ]
-}
-```
-若需要静态链接 SDL2，则修改`"-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic"`为`"-DVCPKG_TARGET_TRIPLET=x64-mingw-static"`
-
-4. 新建 `./vcpkg.json`，添加内容：
+## vcpkg.json
+仓库根目录已包含 `./vcpkg.json`（manifest 模式依赖清单），内容如下：
 ```json
 {
     "name": "lv-port-pc-vscode",
