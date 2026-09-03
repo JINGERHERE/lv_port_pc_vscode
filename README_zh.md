@@ -1,4 +1,5 @@
 # VSCode Simulator project for LVGL
+包含 lv_demos 仓库（作为 submodule）中的所有 demo。
 
 
 ## 说明

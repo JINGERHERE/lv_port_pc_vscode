@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "lv_demos_ext.h"
 #include "lvgl/demos/lv_demos.h"
 #include "lvgl/examples/lv_examples.h"
 #include "lvgl/lvgl.h"
@@ -86,17 +87,32 @@ int SDL_main(int argc, char** argv)
     lv_init();
 
     /*Initialize the HAL (display, input devices, tick) for LVGL*/
-    hal_init(320, 480);
+    hal_init(512, 512);
 
 #if LV_USE_OS == LV_OS_NONE
 
-    lv_demo_widgets();
+    /*---------------------------
+     * 用户 UI
+    ---------------------------*/
+    // lv_demo_widgets();
     // lv_demo_benchmark();
 
+    /*---------------------------
+     * Demos from lvgl/lv_demos
+    ---------------------------*/
+    // lv_demo_smartwatch();
+    lv_demo_flex_layout();
+
+    /*---------------------------
+     * 用户 UI
+    ---------------------------*/
     //   my_gui();
     //   round_gui();
     // img_gui();
 
+    /*---------------------------
+     * LVGL 主循环
+    ---------------------------*/
     while (1) {
         /* Periodically call the lv_task handler.
          * It could be done in a timer interrupt or an OS task too.*/

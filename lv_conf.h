@@ -1515,7 +1515,7 @@
     #define LV_USE_DEMO_HIGH_RES        0
 
     /* Smart watch demo */
-    #define LV_USE_DEMO_SMARTWATCH      0
+    #define LV_USE_DEMO_SMARTWATCH      1
 #endif /* LV_BUILD_DEMOS */
 
 /*--END OF LV_CONF_H--*/
