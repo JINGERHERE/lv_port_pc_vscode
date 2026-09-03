@@ -1,6 +1,6 @@
 #include "test_ui.h"
 
-#include "lvgl.h"
+#include <lvgl.h>
 
 #include "usr_assets.h"
 
@@ -39,6 +39,6 @@ void round_gui() {
 
 void img_gui() {
     lv_obj_t* img = lv_image_create(lv_scr_act());
-    lv_image_set_src(img, usr_find_asset("esp_logo.png"));
+    find_lv_assets(img, "esp_logo.png");
     lv_obj_center(img);
 }

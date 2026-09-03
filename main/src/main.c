@@ -74,11 +74,11 @@ extern void freertos_main(void);
 #include "test_ui.h"
 
 #if !defined(_WIN32)
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
 #else
-int SDL_main(int argc, char** argv) {
+int SDL_main(int argc, char** argv)
 #endif
-
+{
     (void)argc; /*Unused*/
     (void)argv; /*Unused*/
 
@@ -90,10 +90,12 @@ int SDL_main(int argc, char** argv) {
 
 #if LV_USE_OS == LV_OS_NONE
 
-    // lv_demo_widgets();
+    lv_demo_widgets();
+    // lv_demo_benchmark();
+
     //   my_gui();
     //   round_gui();
-    img_gui();
+    // img_gui();
 
     while (1) {
         /* Periodically call the lv_task handler.
