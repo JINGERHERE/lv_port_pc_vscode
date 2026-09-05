@@ -87,7 +87,7 @@ int SDL_main(int argc, char** argv)
     lv_init();
 
     /*Initialize the HAL (display, input devices, tick) for LVGL*/
-    hal_init(512, 512);
+    hal_init(360, 360);
 
 #if LV_USE_OS == LV_OS_NONE
 
@@ -101,14 +101,12 @@ int SDL_main(int argc, char** argv)
      * Demos from lvgl/lv_demos
     ---------------------------*/
     // lv_demo_smartwatch();
-    lv_demo_flex_layout();
+    // lv_demo_flex_layout();
 
     /*---------------------------
      * 用户 UI
     ---------------------------*/
-    //   my_gui();
-    //   round_gui();
-    // img_gui();
+    test_ui();
 
     /*---------------------------
      * LVGL 主循环

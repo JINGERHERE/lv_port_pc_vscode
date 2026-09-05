@@ -4,11 +4,7 @@
 extern "C" {
 #endif
 
-void my_gui(void);
-
-void round_gui(void);
-
-void img_gui(void);
+void test_ui(void);
 
 #ifdef __cplusplus
 }
