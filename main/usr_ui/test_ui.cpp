@@ -3,7 +3,63 @@
 #include <lvgl.h>
 #include <src/font/lv_symbol_def.h>
 
-#include "usr_assets.h"
+#include "ft_pages.h"
+
+void test_ui(void) {
+    FactoryPages& fp = FactoryPages::GetInstance();
+
+    // 添加测试卡片：一张卡片 = 一个功能测试
+    fp.AddTest(
+        "WLAN",                            // 卡片标题
+        [] { /* 开始：模拟启动 WLAN */ },  // 开始回调
+        [] { /* 停止 */ }                  // 停止回调
+    );
+
+    fp.AddTest(
+        "SD Card",                      // 卡片标题
+        [] { /* 开始：挂载 SD 卡 */ },  // 开始回调
+        [] { /* 停止：释放 SD 卡 */ }   // 停止回调
+    );
+
+    fp.AddTest(
+        "TEST",                   // 卡片标题
+        [] { /* 开始：测试 */ },  // 开始回调
+        [] { /* 停止 */ }         // 停止回调
+    );
+
+    fp.AddTest(
+        "TEST",                   // 卡片标题
+        [] { /* 开始：测试 */ },  // 开始回调
+        [] { /* 停止 */ }         // 停止回调
+    );
+
+    fp.AddTest(
+        "TEST",                   // 卡片标题
+        [] { /* 开始：测试 */ },  // 开始回调
+        [] { /* 停止 */ }         // 停止回调
+    );
+
+    fp.AddTest(
+        "TEST",                   // 卡片标题
+        [] { /* 开始：测试 */ },  // 开始回调
+        [] { /* 停止 */ }         // 停止回调
+    );
+
+    fp.AddTest(
+        "TEST",                   // 卡片标题
+        [] { /* 开始：测试 */ },  // 开始回调
+        [] { /* 停止 */ }         // 停止回调
+    );
+
+    fp.AddTest(
+        "TEST",                   // 卡片标题
+        [] { /* 开始：测试 */ },  // 开始回调
+        [] { /* 停止 */ }         // 停止回调
+    );
+}
+
+#if 0
+    #include "usr_assets.h"
 
 static void set_x_cb(void* var, int32_t v) {
     lv_obj_set_x((lv_obj_t*)var, v);
@@ -151,7 +207,7 @@ void test_ui(void) {
     lv_obj_add_event_cb(btn1, btn1_ui, LV_EVENT_CLICKED, NULL);
 }
 
-#if 0
+
 
 void my_gui() {
     lv_obj_t* switch_obj = lv_switch_create(lv_scr_act());
