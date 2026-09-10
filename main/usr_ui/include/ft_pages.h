@@ -44,12 +44,20 @@ public:
 
     /**
      * @brief 添加一张测试卡片
-     * @param title    卡片标题（框架内部拷贝，调用后原字符串可释放）
-     * @param on_start 详情页「开始」按钮回调
-     * @param on_stop  详情页「停止」按钮回调
+     * @param title        卡片标题（框架内部拷贝，调用后原字符串可释放）
+     * @param on_start     详情页「开始」按钮回调
+     * @param on_stop      详情页「停止」按钮回调；可为空（传 nullptr 或 {}），
+     *                     但提供 on_start 时建议同时提供，否则「返回自动停止」无法真正停掉硬件
+     * @param keep_on_back 返回主界面时是否保留运行（true=不自动停止）；默认 false，
+     *                     即返回时若测试仍在运行（点了「开始」未点「停止」）会自动补一次 on_stop
      * @note 未调用 Initialize 时会自动初始化
      */
-    void AddTest(const char* title, std::function<void()> on_start, std::function<void()> on_stop);
+    void AddTest(
+        const char*           title,
+        std::function<void()> on_start,
+        std::function<void()> on_stop,
+        bool                  keep_on_back = false
+    );
 
 private:
     // 单例构造 / 析构
@@ -60,9 +68,11 @@ private:
      * @brief 单张测试卡片的数据
      */
     struct TestItem {
-        std::string           title;     // 卡片标题（详情页标题复用）
-        std::function<void()> on_start;  // 「开始」按钮回调
-        std::function<void()> on_stop;   // 「停止」按钮回调
+        std::string           title;                 // 卡片标题（详情页标题复用）
+        std::function<void()> on_start;              // 「开始」按钮回调
+        std::function<void()> on_stop;               // 「停止」按钮回调（可为空）
+        bool                  keep_on_back = false;  // 返回时是否保留运行（true=不自动停止）
+        bool                  is_running   = false;  // 当前是否正在运行
     };
 
     // ===== ===== ===== ===== =====

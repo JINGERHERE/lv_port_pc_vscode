@@ -31,12 +31,15 @@ void FactoryPages::Deinitialize() {
 }
 
 void FactoryPages::AddTest(
-    const char* title, std::function<void()> on_start, std::function<void()> on_stop
+    const char*           title,
+    std::function<void()> on_start,
+    std::function<void()> on_stop,
+    bool                  keep_on_back
 ) {
     if (!initialized_) Initialize();  // 懒初始化
 
     size_t idx = items_.size();
-    items_.push_back({title, std::move(on_start), std::move(on_stop)});
+    items_.push_back({title, std::move(on_start), std::move(on_stop), keep_on_back});
 
     // 卡片 = 一个满宽按钮
     lv_obj_t* card = lv_button_create(card_cont_);
@@ -90,7 +93,7 @@ void FactoryPages::onCardClicked(lv_event_t* e) {
     lv_obj_t* lbl_back = lv_label_create(btn_back);
     lv_label_set_text(lbl_back, LV_SYMBOL_LEFT " Back");
     lv_obj_center(lbl_back);
-    lv_obj_add_event_cb(btn_back, onBack, LV_EVENT_CLICKED, scr);
+    lv_obj_add_event_cb(btn_back, onBack, LV_EVENT_CLICKED, (void*)(intptr_t)idx);
 
     lv_screen_load(scr);  // 切到详情页
 }
@@ -98,18 +101,48 @@ void FactoryPages::onCardClicked(lv_event_t* e) {
 void FactoryPages::onStart(lv_event_t* e) {
     FactoryPages& self = GetInstance();
     size_t        idx  = (size_t)(intptr_t)lv_event_get_user_data(e);
-    if (idx < self.items_.size() && self.items_[idx].on_start) self.items_[idx].on_start();
+
+    // 索引超出范围
+    if (idx >= self.items_.size()) return;
+
+    // 不重复运行
+    if (self.items_[idx].is_running) return;
+
+    if (self.items_[idx].on_start) {
+        self.items_[idx].on_start();
+        self.items_[idx].is_running = true;
+    }
 }
 
 void FactoryPages::onStop(lv_event_t* e) {
     FactoryPages& self = GetInstance();
     size_t        idx  = (size_t)(intptr_t)lv_event_get_user_data(e);
-    if (idx < self.items_.size() && self.items_[idx].on_stop) self.items_[idx].on_stop();
+    if (idx >= self.items_.size()) return;
+
+    // 停止
+    if (self.items_[idx].on_stop) {
+        self.items_[idx].on_stop();
+    }
+
+    // 无论 on_stop 是否为空，状态都复位
+    self.items_[idx].is_running = false;
 }
 
 void FactoryPages::onBack(lv_event_t* e) {
-    FactoryPages& self   = GetInstance();
-    lv_obj_t*     detail = (lv_obj_t*)lv_event_get_user_data(e);
+    FactoryPages& self = GetInstance();
+    size_t        idx  = (size_t)(intptr_t)lv_event_get_user_data(e);
+
+    // 返回时：若测试仍在运行且未配置「返回保留」，先补一次 stop，避免功能残留/冲突
+    if (idx < self.items_.size() && self.items_[idx].is_running && !self.items_[idx].keep_on_back) {
+        // 停止
+        if (self.items_[idx].on_stop) {
+            self.items_[idx].on_stop();
+        }
+        // 更新状态
+        self.items_[idx].is_running = false;
+    }
+
+    lv_obj_t* detail = lv_screen_active();  // 详情页（此刻仍是 active 屏）
 
     lv_screen_load(self.main_scr_);     // 先切回主屏
     if (detail) lv_obj_delete(detail);  // 再删除详情页（反序会删到 active 屏）
