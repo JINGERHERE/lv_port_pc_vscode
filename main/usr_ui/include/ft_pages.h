@@ -119,6 +119,9 @@ private:
     lv_obj_t* main_scr_  = nullptr;  // 主屏指针
     lv_obj_t* card_cont_ = nullptr;  // 卡片容器（可滚动 flex 列）
 
+    lv_obj_t* focus_line_top_    = nullptr;  // 固定装饰框：上线（标记选中位置）
+    lv_obj_t* focus_line_bottom_ = nullptr;  // 固定装饰框：下线
+
     lv_group_t* main_group_   = nullptr;  // 主界面焦点组（卡片）
     lv_group_t* detail_group_ = nullptr;  // 详情页焦点组（开始/停止/返回按钮）
 

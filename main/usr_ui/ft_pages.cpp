@@ -37,10 +37,33 @@ void FactoryPages::Initialize() {
     lv_obj_set_flex_align(
         card_cont_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER
     );  // 交叉轴水平居中
+    lv_obj_set_scroll_snap_y(card_cont_, LV_SCROLL_SNAP_CENTER);// 垂直滚动时，保持卡片居中
 
     lv_obj_set_style_bg_color(card_cont_, lv_color_white(), 0);  // 容器背景
     lv_obj_set_style_border_width(card_cont_, 1, 0);             // 容器边框
 
+    // ===== ===== ===== ===== =====
+    // 固定装饰框：上下两条线，标记「选中位置」（屏幕中央）
+    // ===== ===== ===== ===== =====
+    focus_line_top_ = lv_obj_create(main_scr_);
+    lv_obj_set_size(focus_line_top_, LV_PCT(72), 2);              // 宽 72% 屏、高 2px
+    lv_obj_align(focus_line_top_, LV_ALIGN_CENTER, 0, -28);       // 中线上方
+    lv_obj_set_style_bg_color(focus_line_top_, lv_color_hex(0xCCCCCC), 0);
+    lv_obj_set_style_bg_opa(focus_line_top_, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(focus_line_top_, 0, 0);         // 去边框
+    lv_obj_set_style_radius(focus_line_top_, 0, 0);               // 去圆角
+    lv_obj_clear_flag(focus_line_top_, LV_OBJ_FLAG_CLICKABLE);    // 不拦截点击
+
+    focus_line_bottom_ = lv_obj_create(main_scr_);
+    lv_obj_set_size(focus_line_bottom_, LV_PCT(72), 2);
+    lv_obj_align(focus_line_bottom_, LV_ALIGN_CENTER, 0, 28);     // 中线下方
+    lv_obj_set_style_bg_color(focus_line_bottom_, lv_color_hex(0xCCCCCC), 0);
+    lv_obj_set_style_bg_opa(focus_line_bottom_, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(focus_line_bottom_, 0, 0);
+    lv_obj_set_style_radius(focus_line_bottom_, 0, 0);
+    lv_obj_clear_flag(focus_line_bottom_, LV_OBJ_FLAG_CLICKABLE);
+
+    // 初始化完成
     initialized_ = true;
 }
 
@@ -49,7 +72,13 @@ void FactoryPages::Deinitialize() {
 
     if (card_cont_) lv_obj_delete(card_cont_);  // 删除容器（连带所有卡片）
     card_cont_ = nullptr;
-    main_scr_  = nullptr;
+
+    if (focus_line_top_) lv_obj_delete(focus_line_top_);        // 删除装饰框上线
+    focus_line_top_ = nullptr;
+    if (focus_line_bottom_) lv_obj_delete(focus_line_bottom_);  // 删除装饰框下线
+    focus_line_bottom_ = nullptr;
+
+    main_scr_ = nullptr;
 
     if (detail_group_) lv_group_delete(detail_group_);  // 防御：清理残留的详情页焦点组
     detail_group_ = nullptr;
