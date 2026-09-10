@@ -100,9 +100,15 @@ private:
 
     /**
      * @brief 详情页「返回」按钮点击：切回主屏并删除详情页
-     * @param e LVGL 事件，user_data 为详情页对象指针
+     * @param e LVGL 事件，user_data 为卡片下标（intptr_t）
      */
     static void onBack(lv_event_t* e);
+
+    /**
+     * @brief 把所有输入设备切到指定焦点组
+     * @param g 目标焦点组（group）
+     */
+    static void setAllIndevGroup(lv_group_t* g);
 
     // ===== ===== ===== ===== =====
     // 内部状态
@@ -113,7 +119,12 @@ private:
     lv_obj_t* main_scr_  = nullptr;  // 主屏指针
     lv_obj_t* card_cont_ = nullptr;  // 卡片容器（可滚动 flex 列）
 
+    lv_group_t* main_group_   = nullptr;  // 主界面焦点组（卡片）
+    lv_group_t* detail_group_ = nullptr;  // 详情页焦点组（开始/停止/返回按钮）
+
     int32_t saved_scroll_y_ = 0;  // 进入详情页前保存的滚动位置（返回时恢复）
+
+    lv_style_t focus_style_;  // 焦点样式（橙色底色 + 向下投影）
 
     std::vector<TestItem> items_;  // 已注册测试项（只增不减，下标即稳定 ID）
 };
