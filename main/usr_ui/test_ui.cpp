@@ -11,48 +11,56 @@ void test_ui(void) {
     // 添加测试卡片：一张卡片 = 一个功能测试
     fp.AddTest(
         "WLAN",                            // 卡片标题
+        LV_SYMBOL_WIFI,                    // 卡片图标
         [] { /* 开始：模拟启动 WLAN */ },  // 开始回调
         [] { /* 停止 */ }                  // 停止回调
     );
 
     fp.AddTest(
         "SD Card",                      // 卡片标题
+        LV_SYMBOL_DRIVE,                // 卡片图标
         [] { /* 开始：挂载 SD 卡 */ },  // 开始回调
         [] { /* 停止：释放 SD 卡 */ }   // 停止回调
     );
 
     fp.AddTest(
         "TEST",                   // 卡片标题
+        LV_SYMBOL_SETTINGS,       // 卡片图标
         [] { /* 开始：测试 */ },  // 开始回调
         [] { /* 停止 */ }         // 停止回调
     );
 
     fp.AddTest(
         "TEST",                   // 卡片标题
+        LV_SYMBOL_OK,             // 卡片图标
         [] { /* 开始：测试 */ },  // 开始回调
         [] { /* 停止 */ }         // 停止回调
     );
 
     fp.AddTest(
         "TEST",                   // 卡片标题
+        LV_SYMBOL_CLOSE,          // 卡片图标
         [] { /* 开始：测试 */ },  // 开始回调
         [] { /* 停止 */ }         // 停止回调
     );
 
     fp.AddTest(
         "TEST",                   // 卡片标题
+        LV_SYMBOL_REFRESH,        // 卡片图标
         [] { /* 开始：测试 */ },  // 开始回调
         [] { /* 停止 */ }         // 停止回调
     );
 
     fp.AddTest(
         "TEST",                   // 卡片标题
+        LV_SYMBOL_VOLUME_MID,     // 卡片图标
         [] { /* 开始：测试 */ },  // 开始回调
         [] { /* 停止 */ }         // 停止回调
     );
 
     fp.AddTest(
         "TEST",                   // 卡片标题
+        LV_SYMBOL_CHARGE,         // 卡片图标
         [] { /* 开始：测试 */ },  // 开始回调
         [] { /* 停止 */ }         // 停止回调
     );
