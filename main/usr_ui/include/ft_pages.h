@@ -113,23 +113,14 @@ private:
     static void onCardDelete(lv_event_t* e);
 
     /**
-     * @brief 卡片容器滚动中（每帧）：把焦点同步到「中心最近卡片」（几何驱动焦点）
-     * @param e LVGL 事件（不使用）
-     * @note 程序动画滚动期间（program_scroll_）跳过，防止焦点在中途被抢回
+     * @brief 卡片容器滚动事件分发器（SCROLL / SCROLL_BEGIN / SCROLL_END 三事件合一）
+     * @param e LVGL 事件：SCROLL 每帧、BEGIN 开始（param 非 NULL=动画、NULL=拖动/raw）、END 结束
+     * @note SCROLL 帧中把焦点同步到「中心最近卡片」（几何驱动焦点），
+     *       程序动画滚动期间（program_scroll_）跳过，防止焦点被中途抢回；
+     *       BEGIN 区分「用户拖动」（恢复帧同步 + 杀残留动画）与「程序动画」；
+     *       END 解除抑制并兜底校正焦点到中心卡（幂等）
      */
-    static void onScroll(lv_event_t* e);
-
-    /**
-     * @brief 卡片容器开始滚动：区分「用户拖动」与「程序动画」
-     * @param e LVGL 事件，param 非 NULL 为动画滚动、NULL 为拖动/raw 滚动
-     */
-    static void onScrollBegin(lv_event_t* e);
-
-    /**
-     * @brief 卡片容器滚动结束：清除程序滚动标志并兜底校正焦点到中心卡
-     * @param e LVGL 事件（不使用）
-     */
-    static void onScrollEnd(lv_event_t* e);
+    static void onScrollEvent(lv_event_t* e);
 
     /**
      * @brief 应用选中视觉（隐藏旧卡片进入按钮、浮现新卡片进入按钮）
@@ -193,8 +184,6 @@ private:
 
     lv_obj_t* main_scr_  = nullptr;  // 主屏指针
     lv_obj_t* card_cont_ = nullptr;  // 卡片容器（可滚动 flex 列）
-
-    lv_obj_t* select_zone_ = nullptr;  // 选择区域色块（屏幕中央的蓝色填充）
 
     lv_group_t* main_group_   = nullptr;  // 主界面焦点组（卡片）
     lv_group_t* detail_group_ = nullptr;  // 详情页焦点组（开始/停止/返回按钮）

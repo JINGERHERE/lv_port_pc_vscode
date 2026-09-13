@@ -3,3 +3,6 @@ CompileFlags:
 
 Documentation:
   CommentFormat: Doxygen
+
+InlayHints:
+  ParameterNames: false

@@ -3,7 +3,11 @@
 #include <lvgl.h>
 #include <src/font/lv_symbol_def.h>
 
-#include "ft_pages.h"
+void test_ui(void) {
+}
+
+#if 0
+    #include "ft_pages.h"
 
 void test_ui(void) {
     FactoryPages& fp = FactoryPages::GetInstance();
@@ -66,7 +70,7 @@ void test_ui(void) {
     );
 }
 
-#if 0
+// #if 0
     #include "usr_assets.h"
 
 static void set_x_cb(void* var, int32_t v) {

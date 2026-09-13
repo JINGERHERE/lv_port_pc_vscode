@@ -8,8 +8,7 @@
 namespace {
     // ===== 主界面扁平风格参数（集中定义，便于调整） =====
     constexpr int32_t  CARD_H          = 48;        // 卡片高度
-    constexpr int32_t  ZONE_H          = 56;        // 选择区域色块高度（卡片上下各留 4px）
-    constexpr uint32_t ZONE_COLOR      = 0x569CD6;  // 选择区域色块颜色（蓝）
+    constexpr uint32_t ZONE_COLOR      = 0x569CD6;  // 卡片选中填充颜色（蓝，原生「选择区域」）
     constexpr uint32_t ENTER_SYM_COLOR = 0x333333;  // 进入按钮图标的常态颜色
     constexpr int32_t  ENTER_BTN_WH    = 36;        // 进入按钮边长
 }  // namespace
@@ -17,58 +16,52 @@ namespace {
 void FactoryPages::Initialize() {
     if (initialized_) return;  // 幂等
 
-    main_scr_ = lv_screen_active();  // 复用当前激活屏幕作为主屏（保留鼠标 cursor）
-    lv_obj_set_style_bg_color(main_scr_, lv_color_white(), 0);  // 主屏纯白（默认是浅灰）
-
     main_group_ = lv_group_get_default();  // 复用默认焦点组
     if (!main_group_) {                    // 宿主未创建默认组时自建（ESP32 端兜底）
         main_group_ = lv_group_create();
         lv_group_set_default(main_group_);
     }
-    lv_group_set_wrap(main_group_, false);  // 焦点不循环：滚到首/尾即停（Bug2 修复）
+    lv_group_set_wrap(main_group_, false);  // 焦点不循环
 
     // ===== ===== ===== ===== =====
-    // 选择区域色块：先创建 → z 序最低；卡片全透明，色块从卡片底下透出
+    // 主屏幕
     // ===== ===== ===== ===== =====
-    select_zone_ = lv_obj_create(main_scr_);
-    lv_obj_remove_style_all(select_zone_);              // 裸对象：无主题样式干扰
-    lv_obj_set_size(select_zone_, LV_PCT(72), ZONE_H);  // 宽 72% 屏（比卡片略宽形成条带感）
-    lv_obj_align(select_zone_, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_color(select_zone_, lv_color_hex(ZONE_COLOR), 0);
-    lv_obj_set_style_bg_opa(select_zone_, LV_OPA_COVER, 0);  // 不透明
-    lv_obj_clear_flag(select_zone_, LV_OBJ_FLAG_CLICKABLE);  // 不拦截点击
+    main_scr_ = lv_screen_active();                             // 获取当前已激活的屏幕
+    lv_obj_set_style_bg_color(main_scr_, lv_color_white(), 0);  // 背景色
 
     // ===== ===== ===== ===== =====
-    // 卡片容器：可滚动、垂直排列的 flex 列（扁平：全透明、无边框、无滚动条）
+    // 卡片容器
     // ===== ===== ===== ===== =====
     card_cont_ = lv_obj_create(main_scr_);
-    lv_obj_set_size(card_cont_, LV_PCT(90), LV_PCT(90));  // 容器大小
-    lv_obj_align(card_cont_, LV_ALIGN_CENTER, 0, 0);      // 居中
+    lv_obj_align(card_cont_, LV_ALIGN_CENTER, 0, 0);              // 位置
+    lv_obj_set_size(card_cont_, LV_PCT(80), LV_PCT(80));          // 尺寸
+    lv_obj_set_scrollbar_mode(card_cont_, LV_SCROLLBAR_MODE_ON);  // 滚动条
 
-    lv_obj_set_flex_flow(card_cont_, LV_FLEX_FLOW_COLUMN);        // 垂直排列
     lv_obj_set_scroll_dir(card_cont_, LV_DIR_VER);                // 垂直滚动
     lv_obj_set_scroll_snap_y(card_cont_, LV_SCROLL_SNAP_CENTER);  // 垂直滚动时，保持卡片居中
-    lv_obj_set_scrollbar_mode(card_cont_, LV_SCROLLBAR_MODE_ON);  // 滚动条
+
+    lv_obj_set_flex_flow(card_cont_, LV_FLEX_FLOW_COLUMN);  // 垂直排列
     lv_obj_set_flex_align(
         card_cont_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER
     );  // 交叉轴水平居中
 
-    lv_obj_set_style_bg_opa(card_cont_, LV_OPA_TRANSP, 0);  // 容器透明（露出主屏白底）
-    lv_obj_set_style_border_width(card_cont_, 2, 0);        // 去边框（扁平）
-    lv_obj_set_style_pad_row(card_cont_, 16, 0);            // 卡片间距
+    lv_obj_set_style_pad_row(card_cont_, 12, 0);            // 内部排列间距（间隔行高）
+    lv_obj_set_style_bg_opa(card_cont_, LV_OPA_TRANSP, 0);  // 透明度
+    lv_obj_set_style_border_width(card_cont_, 2, 0);        // 边框
 
-    // 上下对称 padding：让第一张/最后一张卡片也能滚到正中央与色块重合
-    // （也是未来圆屏「两侧卡片缩小」方案的地基）
-    lv_obj_update_layout(card_cont_);
-    int32_t pad = (lv_obj_get_height(card_cont_) - CARD_H) / 2;  // 首尾卡片和父级容器边缘的间距
-    lv_obj_set_style_pad_top(card_cont_, pad, 0);
-    lv_obj_set_style_pad_bottom(card_cont_, pad, 0);
+    // // 上下对称 padding：让第一张/最后一张卡片也能滚到正中央与色块重合
+    // // （也是未来圆屏「两侧卡片缩小」方案的地基）
+    // lv_obj_update_layout(card_cont_);
+    // int32_t pad = (lv_obj_get_height(card_cont_) - CARD_H) / 2;  // 首尾卡片和父级容器边缘的间距
+    // lv_obj_set_style_pad_top(card_cont_, pad, 0);
+    // lv_obj_set_style_pad_bottom(card_cont_, pad, 0);
 
-    // 几何驱动焦点：滚动时实时把焦点同步到「中心最近卡片」
-    // （拖动/惯性/snap 吸附全程跟随，消灭「区域内的卡片未选中」的割裂）
-    lv_obj_add_event_cb(card_cont_, onScroll, LV_EVENT_SCROLL, NULL);
-    lv_obj_add_event_cb(card_cont_, onScrollBegin, LV_EVENT_SCROLL_BEGIN, NULL);
-    lv_obj_add_event_cb(card_cont_, onScrollEnd, LV_EVENT_SCROLL_END, NULL);
+    // ===== ===== ===== ===== =====
+    // 卡片容器事件回调
+    // ===== ===== ===== ===== =====
+    lv_obj_add_event_cb(card_cont_, onScrollEvent, LV_EVENT_SCROLL,      NULL);  // 滚动中（每帧）
+    lv_obj_add_event_cb(card_cont_, onScrollEvent, LV_EVENT_SCROLL_BEGIN, NULL);  // 滚动开始
+    lv_obj_add_event_cb(card_cont_, onScrollEvent, LV_EVENT_SCROLL_END,   NULL);  // 滚动结束
 
     // 初始化完成
     initialized_ = true;
@@ -79,9 +72,6 @@ void FactoryPages::Deinitialize() {
 
     if (card_cont_) lv_obj_delete(card_cont_);  // 删除容器（连带所有卡片）
     card_cont_ = nullptr;
-
-    if (select_zone_) lv_obj_delete(select_zone_);  // 删除选择区域色块
-    select_zone_ = nullptr;
 
     main_scr_       = nullptr;
     focused_idx_    = -1;
@@ -105,71 +95,102 @@ void FactoryPages::AddTest(
 ) {
     if (!initialized_) Initialize();  // 懒初始化
 
+    // 当前的卡片索引
     size_t idx = items_.size();
+    // 新增项
     items_.push_back({title, std::move(on_start), std::move(on_stop), keep_on_back});
 
     // 创建期间暂时脱离默认组，防止卡片内部的 button 自动混入主焦点组
     lv_group_set_default(NULL);
 
-    // ===== 卡片本体：lv_obj（扁平透明，选中高亮交给底下的色块） =====
+    // ===== ===== ===== ===== =====
+    // 卡片本体
+    // ===== ===== ===== ===== =====
     lv_obj_t* card = lv_obj_create(card_cont_);
-    lv_obj_remove_style_all(card);                    // 裸对象：清除主题样式（含 focus 外框）
-    lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);     // 可点击（选中它）
-    lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);  // 卡片自身不滚动
-    lv_obj_set_size(card, LV_PCT(70), CARD_H);        // 卡片宽度 / 高度
-    lv_obj_set_flex_flow(card, LV_FLEX_FLOW_ROW);     // 内部：图标-名称-进入按钮
-    lv_obj_set_flex_align(card, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(card, 8, 0);  // 三元素间距
-    lv_obj_set_style_pad_left(card, 12, 0);   // 左右内边距（元素不贴卡片边缘）
-    lv_obj_set_style_pad_right(card, 12, 0);
+    lv_obj_remove_style_all(card);  // 移除所有样式
+    // lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);  // 卡片自身不滚动
+    lv_obj_set_size(card, LV_PCT(100), CARD_H);  // 卡片宽度 / 高度
 
-    // 选中时文字变大：text_font 是可继承属性，title/icon label 自动跟随，失焦自动还原
-    lv_obj_set_style_text_font(card, &lv_font_montserrat_20, LV_STATE_FOCUS_KEY);
+    lv_obj_set_flex_flow(card, LV_FLEX_FLOW_ROW);  // 内部横向排列
+    lv_obj_set_flex_align(
+        card, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER
+    );  // 交叉轴水平居中
 
-    // 图标（可选）
-    if (icon && icon[0]) {
-        lv_obj_t* icon_lbl = lv_label_create(card);
-        lv_label_set_text(icon_lbl, icon);
-    }
+    lv_obj_set_style_pad_column(card, 8, 0);  // 内部排列间距（间隔列宽）
+    lv_obj_set_style_pad_left(card, 0, 0);    // 内部左边间距
+    lv_obj_set_style_pad_right(card, 0, 0);   // 内部右边间距
 
-    // 名称（占据剩余空间，把进入按钮推到最右）
-    lv_obj_t* label = lv_label_create(card);
-    lv_label_set_text(label, items_[idx].title.c_str());
-    lv_obj_set_flex_grow(label, 1);
+    lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);  // 卡片可点击
 
-    // ===== 进入按钮：只有图标的 button（平时透明无边框，按下高亮，未选中不显示） =====
-    lv_obj_t* btn = lv_button_create(card);
-    lv_obj_set_size(btn, ENTER_BTN_WH, ENTER_BTN_WH);
-    lv_obj_t* sym = lv_label_create(btn);
+    // 卡片文字
+    lv_obj_set_style_text_font(card, &lv_font_montserrat_12, 0);              // 默认字号
+    lv_obj_set_style_text_font(card, &lv_font_montserrat_20, LV_STATE_FOCUSED);  // 选中时字号
+
+    // 选中视觉 = 焦点填充（原生「选择区域」）：FOCUSED 状态由 LVGL 全路径自动管理
+    // （触摸/滚轮聚焦都加、失焦自动移除，lv_obj.c L982-L1021），无需手动 add/remove_state
+    lv_obj_set_style_bg_color(card, lv_color_hex(ZONE_COLOR), LV_STATE_FOCUSED);  // 选中填充色
+    lv_obj_set_style_bg_opa(card, LV_OPA_COVER, LV_STATE_FOCUSED);                // 选中不透明
+
+    // 图标
+    // if (icon && icon[0]) {
+    lv_obj_t* card_icon = lv_label_create(card);
+    lv_label_set_text(card_icon, icon);
+    // }
+
+    // ===== ===== ===== ===== =====
+    // 卡片文本
+    // ===== ===== ===== ===== =====
+    lv_obj_t* card_lbl = lv_label_create(card);
+    lv_label_set_text(card_lbl, items_[idx].title.c_str());                // 设置文本
+    lv_label_set_long_mode(card_lbl, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR);  // 超长循环滚动
+
+    // ===== ===== ===== ===== =====
+    // 卡片按钮
+    // ===== ===== ===== ===== =====
+    // 按钮
+    lv_obj_t* card_btn = lv_button_create(card);
+    lv_obj_add_flag(card_btn, LV_OBJ_FLAG_HIDDEN);  // 未选中不显示
+
+    // 按钮 常规样式
+    lv_obj_set_style_border_width(card_btn, 0, 0);               // 边框宽度
+    lv_obj_set_style_shadow_width(card_btn, 0, 0);               // 阴影
+    lv_obj_set_style_text_color(card_btn, lv_color_black(), 0);  // 文本色
+    // 按钮 按下样式
+    lv_obj_set_style_bg_color(card_btn, lv_color_white(), LV_STATE_PRESSED);
+
+    // 按钮图标
+    lv_obj_t* sym = lv_label_create(card_btn);
     lv_label_set_text(sym, LV_SYMBOL_RIGHT);
     lv_obj_center(sym);
-    // 扁平：常态全透明无边框无阴影
-    lv_obj_set_style_bg_opa(btn, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(btn, 0, 0);
-    lv_obj_set_style_shadow_width(btn, 0, 0);
-    lv_obj_set_style_text_color(btn, lv_color_hex(ENTER_SYM_COLOR), 0);  // 覆盖主题白字
-    // 按下高亮：蓝色块 + 白色图标
-    lv_obj_set_style_bg_color(btn, lv_color_hex(ZONE_COLOR), LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, LV_STATE_PRESSED);
-    lv_obj_set_style_text_color(btn, lv_color_white(), LV_STATE_PRESSED);
-    lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);  // 未选中不显示
-    lv_obj_add_event_cb(btn, onEnterClicked, LV_EVENT_CLICKED, (void*)(intptr_t)idx);
+
+    // ===== ===== ===== ===== =====
+    // 卡片内部 flex 排列权重
+    // ===== ===== ===== ===== =====
+    lv_obj_set_flex_grow(card_icon, 1);
+    lv_obj_set_flex_grow(card_lbl, 2);
+    lv_obj_set_flex_grow(card_btn, 1);
+
+    // ===== ===== ===== ===== =====
+    // 事件回调
+    // ===== ===== ===== ===== =====
+    lv_obj_add_event_cb(card_btn, onEnterClicked, LV_EVENT_CLICKED, (void*)(intptr_t)idx);
 
     // 事件注册（顺序：先注册回调再入组，保证首帧 FOCUSED 可被处理）
     lv_obj_add_event_cb(card, onCardClicked, LV_EVENT_CLICKED, (void*)(intptr_t)idx);  // 多余操作
     // lvgl 的 flex 对象默认就是点击选中
-    
+
     lv_obj_add_event_cb(card, onCardFocused, LV_EVENT_FOCUSED, (void*)(intptr_t)idx);
     lv_obj_add_event_cb(card, onCardKey, LV_EVENT_KEY, (void*)(intptr_t)idx);
 
     // 墓碑化：卡片被删（任何路径）时同步失效 items_ 中的指针，防止悬垂访问
     lv_obj_add_event_cb(card, onCardDelete, LV_EVENT_DELETE, (void*)(intptr_t)idx);
 
+    // 其实不一定要默认，可以用 lv_group_add_obj 加入对应分组
     lv_group_set_default(main_group_);  // 恢复默认组（后续 AddTest 依赖）
 
     // 先登记指针再入组：首卡入组会触发 refocus → FOCUSED 事件（回调需读取 card/enter_btn）
     items_[idx].card      = card;
-    items_[idx].enter_btn = btn;
+    items_[idx].enter_btn = card_btn;
 
     lv_group_add_obj(main_group_, card);  // lv_obj 不会自动入组，手动加入
 }
@@ -208,20 +229,15 @@ void FactoryPages::onCardDelete(lv_event_t* e) {
 }
 
 void FactoryPages::applyFocusVisual(size_t idx) {
-    // 恢复上一次选中卡片的视觉（隐藏其进入按钮、清除键盘焦点状态）
-    // 墓碑条目（对象已删）判空跳过
-    if (focused_idx_ >= 0 && (size_t)focused_idx_ < items_.size() && (size_t)focused_idx_ != idx &&
-        items_[focused_idx_].enter_btn) {
-        lv_obj_add_flag(items_[focused_idx_].enter_btn, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_remove_state(items_[focused_idx_].card, LV_STATE_FOCUS_KEY);
+    // 蓝底填充与文字放大挂在 LV_STATE_FOCUSED 上，由 LVGL 聚焦/失焦全自动切换；
+    // 此处只管理非焦点传导的部分：进入按钮显隐（enter_btn 不在焦点链上）
+    if (focused_idx_ >= 0 && (size_t)focused_idx_ < items_.size() &&
+        (size_t)focused_idx_ != idx && items_[focused_idx_].enter_btn) {
+        lv_obj_add_flag(items_[focused_idx_].enter_btn, LV_OBJ_FLAG_HIDDEN);  // 旧卡按钮隐藏
     }
     focused_idx_ = (int32_t)idx;
 
-    // 选中：进入按钮浮现 + 文字放大状态（与按钮同一处代码驱动，不依赖 indev 类型）
-    // 注：LVGL 默认只在 KEYPAD/ENCODER indev 活跃时才加 LV_STATE_FOCUS_KEY（lv_obj.c L998），
-    // 触摸路径不会加，故由我们显式管理；滚轮路径的重叠设置幂等无害
-    lv_obj_clear_flag(items_[idx].enter_btn, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_state(items_[idx].card, LV_STATE_FOCUS_KEY);
+    lv_obj_clear_flag(items_[idx].enter_btn, LV_OBJ_FLAG_HIDDEN);  // 新卡按钮浮现
 }
 
 void FactoryPages::syncFocusToCenterCard() {
@@ -254,35 +270,39 @@ void FactoryPages::syncFocusToCenterCard() {
     syncing_ = false;
 }
 
-void FactoryPages::onScroll(lv_event_t* e) {
-    LV_UNUSED(e);
+void FactoryPages::onScrollEvent(lv_event_t* e) {
     FactoryPages& self = GetInstance();
 
-    // 程序动画滚动中（滚轮/点击触发的 scroll_to_view）：跳过，动画终点即目标卡
-    if (self.program_scroll_) return;
+    switch (lv_event_get_code(e)) {
+        case LV_EVENT_SCROLL: {
+            // 滚动中（每帧）：程序动画滚动中（滚轮/点击触发的 scroll_to_view）跳过，
+            // 动画终点即目标卡，防止焦点被中途抢回
+            if (self.program_scroll_) return;
+            self.syncFocusToCenterCard();  // 拖动/惯性/snap 吸附每帧跟随中心卡片
+            break;
+        }
 
-    self.syncFocusToCenterCard();  // 拖动/惯性/snap 吸附每帧跟随中心卡片
-}
+        case LV_EVENT_SCROLL_BEGIN: {
+            if (lv_event_get_param(e) == NULL) {
+                // 参数 NULL = 用户拖动 / raw 滚动：拖动接管，恢复帧同步；
+                // 并杀掉 press 聚焦可能触发的 scroll_to_view 残留动画，避免与拖动打架
+                self.program_scroll_ = false;
+                lv_obj_stop_scroll_anim(self.card_cont_);
+            }
+            // 参数非 NULL = 动画滚动（scroll_to_view / 释放后 snap 吸附）：不处理
+            break;
+        }
 
-void FactoryPages::onScrollBegin(lv_event_t* e) {
-    FactoryPages& self = GetInstance();
+        case LV_EVENT_SCROLL_END: {
+            // 滚动结束：解除程序动画抑制，并兜底校正焦点（snap 已把某卡送到中心，幂等）
+            self.program_scroll_ = false;
+            self.syncFocusToCenterCard();
+            break;
+        }
 
-    if (lv_event_get_param(e) == NULL) {
-        // 参数 NULL = 用户拖动 / raw 滚动：拖动接管，恢复帧同步；
-        // 并杀掉 press 聚焦可能触发的 scroll_to_view 残留动画，避免与拖动打架
-        self.program_scroll_ = false;
-        lv_obj_stop_scroll_anim(self.card_cont_);
+        default:
+            break;  // 不应到达：注册时 filter 限定为三个滚动事件
     }
-    // 参数非 NULL = 动画滚动（scroll_to_view / 释放后 snap 吸附）：不处理
-}
-
-void FactoryPages::onScrollEnd(lv_event_t* e) {
-    LV_UNUSED(e);
-    FactoryPages& self = GetInstance();
-
-    // 滚动结束：解除程序动画抑制，并兜底校正焦点（snap 已把某卡送到中心，幂等）
-    self.program_scroll_ = false;
-    self.syncFocusToCenterCard();
 }
 
 void FactoryPages::onCardClicked(lv_event_t* e) {
