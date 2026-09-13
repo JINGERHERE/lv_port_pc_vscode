@@ -20,10 +20,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "PageManager.h"
+#include <string.h>  // memcpy
+
 #include "PM_Log.h"
-// [移植改动] 原工程靠 <Arduino.h> 间接引入 memcpy，PC 端需显式包含
-#include <string.h>
+#include "PageManager.h"
 
 /**
   * @brief  Enter a new page, the old page is pushed onto the stack

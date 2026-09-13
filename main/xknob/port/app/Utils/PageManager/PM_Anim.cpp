@@ -22,8 +22,6 @@
  */
 #include "PageManager.h"
 #include "PM_Log.h"
-// [移植改动] 原工程靠 <Arduino.h> 间接引入 memset，PC 端需显式包含
-#include <string.h>
 
 /**
   * @brief  Set the transparency of obj

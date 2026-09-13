@@ -61,16 +61,24 @@ main/xknob/
 | 来源 | 目标 | 改动 | 说明 |
 |---|---|---|---|
 | `app/Utils/PageManager/PageManager.h` | `port/app/Utils/PageManager/PageManager.h` | 原样 | 页面栈对外接口 |
-| `app/Utils/PageManager/PageBase.h` | 同上目录 | 小改 | 补 `<string.h>`（原本靠 Arduino.h 传递 `memcpy`） |
+| `app/Utils/PageManager/PageBase.h` | 同上目录 | 小改 | 补 `<string.h>`——本文件夹内**统一由它提供**（原本靠 Arduino.h 传递 `memcpy`） |
 | `app/Utils/PageManager/PageFactory.h` | 同上 | 原样 | 抽象工厂 |
-| `app/Utils/PageManager/PM_Base.cpp` | 同上 | 小改 | 补 `<string.h>` |
-| `app/Utils/PageManager/PM_Anim.cpp` | 同上 | 小改 | 补 `<string.h>` |
-| `app/Utils/PageManager/PM_Router.cpp` | 同上 | 小改 | `lv_mem_alloc` → `lv_malloc`；补 `<string.h>` |
+| `app/Utils/PageManager/PM_Base.cpp` | 同上 | 原样 | 用到的 `memset`/`strcmp` 由 `PageManager.h → PageBase.h` 传递 |
+| `app/Utils/PageManager/PM_Anim.cpp` | 同上 | 原样 | 同上（`memset`） |
+| `app/Utils/PageManager/PM_Router.cpp` | 同上 | 小改 | `lv_mem_alloc` → `lv_malloc`；（另加的 `<string.h>` 与 PageBase.h 重复，属冗余） |
 | `app/Utils/PageManager/PM_State.cpp` | 同上 | 小改 | `root_obj->user_data =` → `lv_obj_set_user_data()`；`lv_mem_free` → `lv_free` |
 | `app/Utils/PageManager/PM_Drag.cpp` | 同上 | 小改 | `lv_event_get_target` → `lv_event_get_target_obj`；`lv_event_send` → `lv_obj_send_event` |
 | `app/Utils/PageManager/PM_Log.h` | 同上 | 原样 | PC 不定义 `ARDUINO`，自动走 printf 分支 |
 | `app/Utils/PageManager/ResourceManager.h` | 同上 | 原样 | 通用 name→ptr 资源池 |
 | `app/Utils/PageManager/ResourceManager.cpp` | 同上 | 原样 | — |
+
+> **关于 `<string.h>`**：上游这些文件在 ESP32 上靠 `<Arduino.h>` 间接获得 `memcpy`/`memset`/`strcmp`。
+> 实测 `lvgl.h` 的包含闭包（330 个文件）**不含** `<string.h>`/`<stdio.h>`/`<stdlib.h>`，故必须自行引入。
+> 本文件夹采用「集中提供」：`PageManager.h` 一开头就 include `PageBase.h`，因此凡经 `PageManager.h` 进入的文件
+> （`PM_Anim` / `PM_Base` / `PM_Drag` / `PM_Router` / `PM_State`）都能拿到它，无需各自重复 include。
+>
+> 但有两个文件**够不到** `PageBase.h`，必须自带：`ResourceManager.cpp`（只 include `ResourceManager.h` + `PM_Log.h`）、
+> `lv_obj_ext_func.cpp`（只 include `lv_obj_ext_func.h`）。
 
 ### 3.2 LVGL 扩展 `Utils/lv_ext/`（6 文件）
 

@@ -22,8 +22,7 @@
  */
 #include "lv_obj_ext_func.h"
 
-// [移植改动] 原工程靠 <Arduino.h> 间接引入 strlen，PC 端需显式包含
-#include <string.h>
+#include <string.h>  // strlen
 
 void lv_obj_set_opa_scale(lv_obj_t* obj, int16_t opa)
 {

@@ -23,10 +23,9 @@
 #ifndef __PAGE_BASE_H
 #define __PAGE_BASE_H
 
-#include "lvgl.h"
+#include <string.h>  // memcpy
 
-// [移植改动] 原工程靠 <Arduino.h> 间接引入 memcpy，PC 端需显式包含
-#include <string.h>
+#include "lvgl.h"
 
 /* Generate stash area data */
 #define PAGE_STASH_MAKE(data) {&(data), sizeof(data)}

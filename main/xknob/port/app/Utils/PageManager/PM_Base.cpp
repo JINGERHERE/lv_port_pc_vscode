@@ -23,8 +23,6 @@
 #include "PageManager.h"
 #include "PM_Log.h"
 #include <algorithm>
-// [移植改动] 原工程靠 <Arduino.h> 间接引入 memset/strcmp，PC 端需显式包含
-#include <string.h>
 
 #define PM_EMPTY_PAGE_NAME "EMPTY_PAGE"
 
