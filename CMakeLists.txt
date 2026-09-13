@@ -92,13 +92,15 @@ else()
     )
 endif()
 
-# 添加 usr_ui 子目录
-add_subdirectory(${PROJECT_SOURCE_DIR}/main/usr_ui)
+add_subdirectory(${PROJECT_SOURCE_DIR}/main/usr_ui) # 添加 usr_ui 子目录
+add_subdirectory(${PROJECT_SOURCE_DIR}/main/xknob) # 添加 xknob 子目录
 
 # Define LVGL configuration as a simple include
 target_compile_definitions(main PRIVATE LV_CONF_INCLUDE_SIMPLE)
 # target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread)
-target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread lv_demos_ext usr_ui)  # 链接 usr_ui 库
+# 链接 usr_ui xknob 库
+target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread lv_demos_ext
+                        usr_ui xknob)
 
 # Only link freertos_config if the FreeRTOS directory exists
 if(USE_FREERTOS)

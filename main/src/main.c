@@ -73,6 +73,7 @@ extern void freertos_main(void);
  *   USER INCLUDE
  **********************/
 #include "test_ui.h"
+#include "display_xknob.h"
 
 #if !defined(_WIN32)
 int main(int argc, char** argv)
@@ -87,7 +88,7 @@ int SDL_main(int argc, char** argv)
     lv_init();
 
     /*Initialize the HAL (display, input devices, tick) for LVGL*/
-    hal_init(280, 456);
+    hal_init(240, 240);
 
 #if LV_USE_OS == LV_OS_NONE
 
@@ -106,7 +107,8 @@ int SDL_main(int argc, char** argv)
     /*---------------------------
      * 用户 UI
     ---------------------------*/
-    test_ui();
+    // test_ui();
+    display_xknob();
 
     /*---------------------------
      * LVGL 主循环

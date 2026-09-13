@@ -1030,7 +1030,7 @@
 #define LV_USE_TINY_TTF 1
 #if LV_USE_TINY_TTF
     /* 启用从文件加载 TTF 数据 */
-    #define LV_TINY_TTF_FILE_SUPPORT 0
+    #define LV_TINY_TTF_FILE_SUPPORT 1
     #define LV_TINY_TTF_CACHE_GLYPH_CNT 128
     #define LV_TINY_TTF_CACHE_KERNING_CNT 256
 #endif
