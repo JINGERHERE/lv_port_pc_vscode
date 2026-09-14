@@ -29,8 +29,8 @@ void Menu::onCustomAttrConfig()
 void Menu::onViewLoad()
 {
 	Model.Init();
-	View.Create(root);
-	AttachEvent(root, onPlaygroundEvent);
+	View.Create(_root);
+	AttachEvent(_root, onPlaygroundEvent);
 	AttachEvent(View.ui.dialpad.icon, onSuperDialEvent);
 	AttachEvent(View.ui.switches.icon, onPlaygroundEvent);
 	AttachEvent(View.ui.hass.icon, onHassEvent);
@@ -54,8 +54,8 @@ void Menu::onViewWillAppear()
 	timer = lv_timer_create(onTimerUpdate, 100, this);
 	lv_timer_ready(timer);
 
-	View.SetScrollToY(root, -LV_VER_RES, LV_ANIM_OFF);
-	lv_obj_fade_in(root, 300, 0);
+	View.SetScrollToY(_root, -LV_VER_RES, LV_ANIM_OFF);
+	lv_obj_fade_in(_root, 300, 0);
 }
 
 void Menu::onViewDidAppear()
@@ -65,7 +65,7 @@ void Menu::onViewDidAppear()
 
 void Menu::onViewWillDisappear()
 {
-	lv_obj_fade_out(root, 300, 0);
+	lv_obj_fade_out(_root, 300, 0);
 }
 
 void Menu::onViewDidDisappear()
@@ -119,7 +119,7 @@ void Menu::onPlaygroundEvent(lv_event_t* event)
 
 	if (code == LV_EVENT_PRESSED) {
 		// instance->Model.ChangeMotorMode(MOTOR_FINE_DETENTS);
-		instance->Manager->Push("Pages/Playground");
+		instance->_Manager->Push("Pages/Playground");
 	}
 }
 
@@ -149,7 +149,7 @@ void Menu::onSettingEvent(lv_event_t* event)
 	auto* instance = (Menu*)lv_obj_get_user_data(obj);
 	if (code == LV_EVENT_PRESSED) {
 		printf("Menu: onSystemEvent LV_EVENT_PRESSED\n");
-		instance->Manager->Push("Pages/Setting");
+		instance->_Manager->Push("Pages/Setting");
 	}
 }
 
@@ -168,8 +168,8 @@ void Menu::onSuperDialEvent(lv_event_t* event)
 //		Stash_t stash;
 //		stash.ptr = &mode;
 //		stash.size = sizeof(int16_t);
-//		instance->Manager->Push("Pages/SurfaceDial", &stash);
-		instance->Manager->Push("Pages/SurfaceDial");
+//		instance->_Manager->Push("Pages/SurfaceDial", &stash);
+		instance->_Manager->Push("Pages/SurfaceDial");
 	}
 }
 
@@ -183,6 +183,6 @@ void Menu::onHassEvent(lv_event_t* event)
 
 	if (code == LV_EVENT_SHORT_CLICKED) {
 		printf("Menu: onHassEvent LV_EVENT_PRESSED\n");
-		instance->Manager->Push("Pages/Hass");
+		instance->_Manager->Push("Pages/Hass");
 	}
 }

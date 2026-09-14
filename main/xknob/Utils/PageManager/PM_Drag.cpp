@@ -22,11 +22,13 @@
  */
 #include "PageManager.h"
 #include "PM_Log.h"
+#include <stdlib.h>
+// [移植改动] 本文件用到 std::max/std::min/std::abs（:88/:89/:132），
+//            X-TRACK 靠传递包含侥幸可用；PC 端显式引入，避免依赖间接包含
+#include <algorithm>
+#include <cstdlib>
 
-#define ABS(x) (((x)>0)?(x):-(x))
 #define CONSTRAIN(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#define MAX(a,b) ((a)>(b)?(a):(b))
 
 /* The distance threshold to trigger the drag */
 #define PM_INDEV_DEF_DRAG_THROW    20
@@ -38,43 +40,60 @@
   */
 void PageManager::onRootDragEvent(lv_event_t* event)
 {
-    // [移植改动] LVGL v9 的 lv_event_get_target() 返回 void*，C++ 下需用 lv_event_get_target_obj()
-    // 原: lv_obj_t* root = lv_event_get_target(event);
-    lv_obj_t* root = lv_event_get_target_obj(event);
-    PageBase* base = (PageBase*)lv_obj_get_user_data(root);
+    lv_event_code_t eventCode = lv_event_get_code(event);
 
-    if (base == nullptr)
+    if (!(eventCode == LV_EVENT_PRESSED || eventCode == LV_EVENT_PRESSING || eventCode == LV_EVENT_RELEASED))
     {
         return;
     }
 
-    lv_event_code_t eventCode = lv_event_get_code(event);
-    PageManager* manager = base->Manager;
+    // [移植改动] LVGL v9 的 lv_event_get_current_target() 返回 void*，
+    //            C++ 下不能隐式转 lv_obj_t*，需用 _obj 版本
+    // 原: lv_obj_t* root = lv_event_get_current_target(event);
+    lv_obj_t* root = lv_event_get_current_target_obj(event);
+    PageBase* base = (PageBase*)lv_event_get_user_data(event);
+
+    if (base == nullptr)
+    {
+        PM_LOG_ERROR("Page base is NULL");
+        return;
+    }
+
+    PageManager* manager = base->_Manager;
     LoadAnimAttr_t animAttr;
 
     if (!manager->GetCurrentLoadAnimAttr(&animAttr))
     {
+        PM_LOG_ERROR("Can't get current anim attr");
         return;
     }
 
     if (eventCode == LV_EVENT_PRESSED)
     {
-        if (manager->AnimState.IsSwitchReq)
+        if (manager->_AnimState.IsSwitchReq)
+        {
             return;
+        }
 
-        if (!manager->AnimState.IsBusy)
+        if (!manager->_AnimState.IsBusy)
+        {
             return;
+        }  
 
         PM_LOG_INFO("Root anim interrupted");
         lv_anim_del(root, animAttr.setter);
-        manager->AnimState.IsBusy = false;
+        manager->_AnimState.IsBusy = false;
+
+        /* Temporary showing the bottom page */
+        PageBase* bottomPage = manager->GetStackTopAfter();
+        lv_obj_clear_flag(bottomPage->_root, LV_OBJ_FLAG_HIDDEN);
     }
     else if (eventCode == LV_EVENT_PRESSING)
     {
         lv_coord_t cur = animAttr.getter(root);
 
-        lv_coord_t max = MAX(animAttr.pop.exit.start, animAttr.pop.exit.end);
-        lv_coord_t min = MIN(animAttr.pop.exit.start, animAttr.pop.exit.end);
+        lv_coord_t max = std::max(animAttr.pop.exit.start, animAttr.pop.exit.end);
+        lv_coord_t min = std::min(animAttr.pop.exit.start, animAttr.pop.exit.end);
 
         lv_point_t offset;
         lv_indev_get_vect(lv_indev_get_act(), &offset);
@@ -92,7 +111,7 @@ void PageManager::onRootDragEvent(lv_event_t* event)
     }
     else if (eventCode == LV_EVENT_RELEASED)
     {
-        if (manager->AnimState.IsSwitchReq)
+        if (manager->_AnimState.IsSwitchReq)
         {
             return;
         }
@@ -117,23 +136,23 @@ void PageManager::onRootDragEvent(lv_event_t* event)
             PM_LOG_INFO("Root drag y_predict = %d", end);
         }
 
-        if (ABS(end) > ABS(offset_sum) / 2)
+        if (std::abs(end) > std::abs((int)offset_sum) / 2)
         {
             lv_async_call(onRootAsyncLeave, base);
         }
         else if(end != animAttr.push.enter.end)
         {
-            manager->AnimState.IsBusy = true;
+            manager->_AnimState.IsBusy = true;
 
             lv_anim_t a;
             manager->AnimDefaultInit(&a);
-            a.user_data = manager;
+            lv_anim_set_user_data(&a, manager);
             lv_anim_set_var(&a, root);
             lv_anim_set_values(&a, start, animAttr.push.enter.end);
             lv_anim_set_exec_cb(&a, animAttr.setter);
-            lv_anim_set_ready_cb(&a, onRootAnimFinish);
+            lv_anim_set_ready_cb(&a, onRootDragAnimFinish);
             lv_anim_start(&a);
-            PM_LOG_INFO("Root anim start");
+            PM_LOG_INFO("Root drag anim start");
         }
     }
 }
@@ -143,11 +162,18 @@ void PageManager::onRootDragEvent(lv_event_t* event)
   * @param  a: Pointer to animation
   * @retval None
   */
-void PageManager::onRootAnimFinish(lv_anim_t* a)
+void PageManager::onRootDragAnimFinish(lv_anim_t* a)
 {
-    PageManager* manager = (PageManager*)a->user_data;
-    PM_LOG_INFO("Root anim finish");
-    manager->AnimState.IsBusy = false;
+    PageManager* manager = (PageManager*)lv_anim_get_user_data(a);
+    PM_LOG_INFO("Root drag anim finish");
+    manager->_AnimState.IsBusy = false;
+
+    /* Hide the bottom page */
+    PageBase* bottomPage = manager->GetStackTopAfter();
+    if (bottomPage)
+    {
+        lv_obj_add_flag(bottomPage->_root, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 /**
@@ -157,25 +183,14 @@ void PageManager::onRootAnimFinish(lv_anim_t* a)
   */
 void PageManager::RootEnableDrag(lv_obj_t* root)
 {
+    PageBase* base = (PageBase*)lv_obj_get_user_data(root);
     lv_obj_add_event_cb(
         root,
         onRootDragEvent,
-        LV_EVENT_PRESSED,
-        nullptr
+        LV_EVENT_ALL,
+        base
     );
-    lv_obj_add_event_cb(
-        root,
-        onRootDragEvent,
-        LV_EVENT_PRESSING,
-        nullptr
-    );
-    lv_obj_add_event_cb(
-        root,
-        onRootDragEvent,
-        LV_EVENT_RELEASED,
-        nullptr
-    );
-    PM_LOG_INFO("Root drag enabled");
+    PM_LOG_INFO("Page(%s) Root drag enabled", base->_Name);
 }
 
 /**
@@ -186,11 +201,11 @@ void PageManager::RootEnableDrag(lv_obj_t* root)
 void PageManager::onRootAsyncLeave(void* data)
 {
     PageBase* base = (PageBase*)data;
-    PM_LOG_INFO("Page(%s) send event: LV_EVENT_LEAVE, need to handle...", base->Name);
-    // [移植改动] LVGL v9 的 lv_event_send 签名已变为 lv_event_send(lv_event_list_t*, lv_event_t*, bool)，
-    //            且六份 api_map 均无映射；向对象发事件改用 lv_obj_send_event()
-    // 原: lv_event_send(base->root, LV_EVENT_LEAVE, nullptr);
-    lv_obj_send_event(base->root, LV_EVENT_LEAVE, nullptr);
+    PM_LOG_INFO("Page(%s) send event: LV_EVENT_LEAVE, need to handle...", base->_Name);
+    // [移植改动] LVGL v9 的 lv_event_send 签名已变为 (lv_event_list_t*, lv_event_t*, bool)，
+    //            且六份 api_map 均无映射；向对象发事件改用 lv_obj_send_event
+    // 原: lv_event_send(base->_root, LV_EVENT_LEAVE, base);
+    lv_obj_send_event(base->_root, LV_EVENT_LEAVE, base);
 }
 
 /**

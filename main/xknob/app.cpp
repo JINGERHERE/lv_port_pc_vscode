@@ -45,12 +45,44 @@
 
 void App_Init()
 {
-    static AppFactory factory;
-    static PageManager manager(&factory);
+    /* [移植改动] 改为堆分配、永不释放（immortal object）。
+     *
+     * 原因：LVGL v9 内置的 SDL 驱动在关窗时的执行顺序是
+     *     SDL_Quit() → lv_deinit() → exit(0)
+     * 即 LVGL 先被反初始化，随后 exit(0) 才触发 C++ 静态对象析构。
+     * 而 X-TRACK 版的 ~PageManager() 会调 SetStackClear() 卸载页面，
+     * 此刻 LVGL 已销毁，只能操作悬空指针 → LV_ASSERT_OBJ 失败
+     * → LV_ASSERT_HANDLER 是 while(1)，进程卡死、窗口无法关闭。
+     *
+     * 对比：X-TRACK 自带的 PC 模拟器用 v8 的 win32drv，关窗后只让 main 的
+     * while 循环退出、并且不调 lv_deinit()，所以同样的写法在那边不会触发。
+     * 这是「后端退出语义」的差异，不是写法错误。
+     *
+     * 堆分配的对象不会被析构，进程退出时由 OS 回收，从根本上避免退出期调用 LVGL。
+     * 注：全局 ResourcePool Resource 的析构只释放 std::vector、不碰 LVGL，无需处理。
+     * 原: static AppFactory factory;
+     * 原: static PageManager manager(&factory);
+     */
+    static AppFactory* factory = new AppFactory();
+    static PageManager* manager = new PageManager(factory);
 
     /* [移植改动] AccountSystem 初始化依赖 HAL，PC 端不启用
      * 原: Accounts_Init();
      */
+
+    /* [移植改动] X-TRACK 版的 PM_State 不再硬编码页面 root 的尺寸，
+     *            改由「根默认样式」提供（见 X-TRACK USER/App/App.cpp:81-88）。
+     *            这里照它的写法建一个 rootStyle：宽高 = 屏幕分辨率 + 黑底。
+     *            若缺少这段，页面 root 会退回 lv_obj 的默认尺寸（非 240x240）。
+     *            注意：rootStyle 必须 static（PageManager 只存指针，需长于页面生命周期）。
+     */
+    static lv_style_t rootStyle;
+    lv_style_init(&rootStyle);
+    lv_style_set_width(&rootStyle, LV_HOR_RES);
+    lv_style_set_height(&rootStyle, LV_VER_RES);
+    lv_style_set_bg_opa(&rootStyle, LV_OPA_COVER);
+    lv_style_set_bg_color(&rootStyle, lv_color_black());
+    manager->SetRootDefaultStyle(&rootStyle);
 
     Resource.Init();
 
@@ -63,8 +95,8 @@ void App_Init()
      *               className -> AppFactory::CreatePage() 用于匹配类名
      *               appName   -> 注册名，供 Push/Pop 使用
      */
-    manager.Install("Template", "Pages/Template");
-    manager.Install("Menu", "Pages/Menu");
+    manager->Install("Template", "Pages/Template");
+    manager->Install("Menu", "Pages/Menu");
 
     /* [移植改动] 以下页面依赖 AccountSystem / HAL / WiFi / MQTT，暂未移植
      * 原: manager.Install("Startup",  "Pages/Startup");
@@ -76,13 +108,13 @@ void App_Init()
      * 原: // manager.Install("Scene3D", "Pages/Scene3D");   // 上游原本即注释状态
      */
 
-    manager.SetGlobalLoadAnimType(PageManager::LOAD_ANIM_OVER_TOP, 500);
+    manager->SetGlobalLoadAnimType(PageManager::LOAD_ANIM_OVER_TOP, 500);
 
     /* [移植改动] 原工程开机进入 StartUp 页（log 动画后自动跳 Menu）；StartUp 尚未移植，
      *            暂时直接进入 Menu。待 StartUp 移植完成后改回。
      * 原: manager.Push("Pages/Startup");
      */
-    manager.Push("Pages/Menu");
+    manager->Push("Pages/Menu");
 
     INIT_DONE();
 }

@@ -20,10 +20,10 @@ void Template::onCustomAttrConfig()
 
 void Template::onViewLoad()
 {
-	View.Create(root);
-	lv_label_set_text(View.ui.labelTitle, Name);
+	View.Create(_root);
+	lv_label_set_text(View.ui.labelTitle, _Name);
 
-	AttachEvent(root);
+	AttachEvent(_root);
 	AttachEvent(View.ui.canvas);
 
 	Model.TickSave = Model.GetData();
@@ -42,7 +42,7 @@ void Template::onViewWillAppear()
 
 	PAGE_STASH_POP(param);
 
-	lv_obj_set_style_bg_color(root, param.color, LV_PART_MAIN);
+	lv_obj_set_style_bg_color(_root, param.color, LV_PART_MAIN);
 
 	// timer = lv_timer_create(onTimerUpdate, param.time, this);
 }
@@ -97,6 +97,6 @@ void Template::onEvent(lv_event_t* event)
 
 	if (code == LV_EVENT_PRESSED)
 	{
-		instance->Manager->Push("Pages/Menu");
+		instance->_Manager->Push("Pages/Menu");
 	}
 }

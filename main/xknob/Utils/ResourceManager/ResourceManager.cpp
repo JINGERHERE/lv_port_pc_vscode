@@ -21,9 +21,13 @@
  * SOFTWARE.
  */
 #include "ResourceManager.h"
-#include "PM_Log.h"
 #include <algorithm>
 #include <string.h>
+#include "lvgl/lvgl.h"
+
+#define RES_LOG_INFO  LV_LOG_INFO
+#define RES_LOG_WARN  LV_LOG_WARN
+#define RES_LOG_ERROR LV_LOG_ERROR
 
 ResourceManager::ResourceManager()
 {
@@ -64,7 +68,7 @@ bool ResourceManager::AddResource(const char* name, void* ptr)
     ResourceNode_t node;
     if (SearchNode(name, &node))
     {
-        PM_LOG_WARN("Resource: %s was register", name);
+        RES_LOG_WARN("Resource: %s was register", name);
         return false;
     }
 
@@ -72,7 +76,7 @@ bool ResourceManager::AddResource(const char* name, void* ptr)
     node.ptr = ptr;
     NodePool.push_back(node);
 
-    PM_LOG_INFO("Resource: %s[0x%p] add success", node.name, node.ptr);
+    RES_LOG_INFO("Resource: %s[0x%p] add success", node.name, node.ptr);
 
     return true;
 }
@@ -87,7 +91,7 @@ bool ResourceManager::RemoveResource(const char* name)
     ResourceNode_t node;
     if(!SearchNode(name, &node))
     {
-        PM_LOG_ERROR("Resource: %s was not found", name);
+        RES_LOG_ERROR("Resource: %s was not found", name);
         return false;
     }
 
@@ -95,13 +99,13 @@ bool ResourceManager::RemoveResource(const char* name)
 
     if (iter == NodePool.end())
     {
-        PM_LOG_ERROR("Resource: %s was not found", name);
+        RES_LOG_ERROR("Resource: %s was not found", name);
         return false;
     }
 
     NodePool.erase(iter);
 
-    PM_LOG_INFO("Resource: %s remove success", name);
+    RES_LOG_INFO("Resource: %s remove success", name);
 
     return true;
 }
@@ -117,11 +121,11 @@ void* ResourceManager::GetResource(const char* name)
 
     if(!SearchNode(name, &node))
     {
-        PM_LOG_WARN("Resource: %s was not found, return default[0x%p]", name, DefaultPtr);
+        RES_LOG_WARN("Resource: %s was not found, return default[0x%p]", name, DefaultPtr);
         return DefaultPtr;
     }
 
-    PM_LOG_INFO("Resource: %s[0x%p] was found", name, node.ptr);
+    RES_LOG_INFO("Resource: %s[0x%p] was found", name, node.ptr);
 
     return node.ptr;
 }
@@ -134,5 +138,5 @@ void* ResourceManager::GetResource(const char* name)
 void ResourceManager::SetDefault(void* ptr)
 {
     DefaultPtr = ptr;
-    PM_LOG_INFO("Resource: set [0x%p] to default", DefaultPtr);
+    RES_LOG_INFO("Resource: set [0x%p] to default", DefaultPtr);
 }
