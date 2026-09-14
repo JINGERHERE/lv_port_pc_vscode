@@ -7,7 +7,8 @@
 
 - `CMakePresets.json`：定义三平台预设 `win-mingw` / `mac-clang` / `linux-clang`（生成器、编译器、triplet、编译类型、产物目录），通过 `${hostSystemName}` 条件自动只显示当前平台可用的预设
 - **环境变量 `VCPKG_ROOT`**：每台机器设置一次，预设内通过 `$env{VCPKG_ROOT}` 引用 vcpkg 工具链，仓库文件中不出现绝对路径
-- **编译类型不能留空**（仅影响 Windows 动态链接）：空编译类型会使链接端选中 debug 库（`SDL2d.dll`）、applocal 却去 release 目录找依赖，两边错位导致运行时找不到 DLL，故预设显式指定 `CMAKE_BUILD_TYPE=Release`
+- **编译器选择** 在 `CMakePresets.json` 中使用 `CMAKE_C_COMPILER` 和 `CMAKE_CXX_COMPILER` 指定编译器（直接用绝对路径避免干扰）；mac不使用自带的 clang 需使用 `CMAKE_OSX_SYSROOT` 指定平台 SDK（Apple 自家的 clang 内置通过 `xcrun` 自动定位 SDK）。
+- **编译类型**（仅影响 Windows 动态链接）：空编译类型会使链接端选中 debug 库（`SDL2d.dll`）、applocal 却去 release 目录找依赖，两边错位导致运行时找不到 DLL，故预设显式指定 `CMAKE_BUILD_TYPE=Release`
 - **分支切换**：切换分支后若上游仓库未切换至指定版本，使用`git submodule update --init --recursive` 将所有 submodule 同步到正确的 commit
 - **链接类型**：修改`CMakePresets.json`，`"VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"`为动态链接，`"VCPKG_TARGET_TRIPLET": "x64-mingw-static"`为静态链接；非 win 平台默认为静态链接
 
@@ -17,7 +18,7 @@
 通用要求：CMake ≥ 3.23、Ninja 构建工具、VSCode 安装 CMake Tools 插件
 
 - **macOS**
-    1. Homebrew安装必要依赖项：`brew install cmake ninja llvm`（系统自带 Apple clang 版本可能较低，预设显式使用 brew llvm 的 clang，路径 `/opt/homebrew/opt/llvm/bin/clang` 已写死在预设中，无需改 PATH）
+    1. Homebrew安装必要依赖项：`brew install cmake ninja llvm`（系统自带 Apple clang 版本可能较低，预设显式使用 brew llvm 的 clang，路径 `/opt/homebrew/opt/llvm/bin/clang`）
     2. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.sh`下载 vcpkg 二进制文件。
     3. `~/.zshrc` 中添加 `export VCPKG_ROOT=<vcpkg目录路径>`，`export PATH="$VCPKG_ROOT:$PATH"`
 
@@ -25,7 +26,7 @@
     1. 安装 cmake：https://cmake.org/download/
     2. 安装 `MinGW`：https://github.com/niXman/mingw-builds-binaries/releases/latest 选择 `x86_64_***_ucrt` 版本，解压后添加到环境变量 `PATH` 中
     3. 安装 `Ninja`：从 https://github.com/ninja-build/ninja/releases 下载 `ninja-win.zip`，解压得到 `ninja.exe`，放入已加入环境变量 `PATH` 的目录中
-    4. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.bat`下载 vcpkg 二进制文件。添加系统环境变量`VCPKG_ROOT`，值为`D:/DEV/vcpkg`，`PATH`中添加`%VCPKG_ROOT%`
+    4. 安装 vcpkg：`git clone https://github.com/microsoft/vcpkg.git`克隆项目，进入项目目录，执行`./bootstrap-vcpkg.bat`下载 vcpkg 二进制文件。添加系统环境变量`VCPKG_ROOT`，值为`D:/DEV/vcpkg`（即 clone 路径），`PATH`中添加`%VCPKG_ROOT%`
 
 - **linux x64**
     1. 安装必要依赖项：`sudo apt update && sudo apt install -y build-essential cmake clang ninja-build`
