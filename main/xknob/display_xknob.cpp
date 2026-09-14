@@ -11,7 +11,7 @@
  *           -> Resource.Init()          （资源池：Tiny TTF 字体 + "A:" 图片路径）
  *           -> PageManager.Install/Push （页面框架，进入 Pages/Menu）
  */
-#include "app/app.h"
+#include "app.h"
 
 void display_xknob(void) {
     App_Init();

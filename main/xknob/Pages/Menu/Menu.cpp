@@ -1,9 +1,9 @@
 #include "Menu.h"
-#include "app/Configs/Version.h"
+#include "Configs/Version.h"
 // [移植改动] 电机 HAL 依赖 ESP32 + SimpleFOC + MT6701 磁编码器，PC 模拟器不启用。
 //            本页仅在 onSystemEvent 里用 HAL::power_off()，该调用已同步注释。
 // 原: #include "hal/motor.h"
-#include "app/app.h"
+#include "app.h"
 
 /* [移植改动] 说明：lv_get_indev() 由 Menu.h -> MenuView.h -> ../Page.h -> lv_obj_ext_func.h 提供，
  *            无需额外包含（移植时已把其内部的 indev->driver->type 改为 v9 的 lv_indev_get_type()）。

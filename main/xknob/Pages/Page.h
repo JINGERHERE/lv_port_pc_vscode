@@ -23,10 +23,10 @@
 #ifndef __PAGE_H
 #define __PAGE_H
 
-#include "app/Utils/PageManager/PageManager.h"
-#include "app/Utils/lv_ext/lv_obj_ext_func.h"
-#include "app/Utils/lv_ext/lv_anim_timeline_wrapper.h"
-#include "app/Resources/ResourcePool.h"
+#include "Utils/PageManager/PageManager.h"
+#include "Utils/lv_ext/lv_obj_ext_func.h"
+#include "Utils/lv_ext/lv_anim_timeline_wrapper.h"
+#include "Resources/ResourcePool.h"
 // [移植改动] StatusBar 依赖 AccountSystem / HAL / SD 卡 / 电池，且 4 处调用点全部被注释，
 //            属死代码。PC 模拟器不移植，故此处停用该 include（StatusBar 未启用）。
 // 原: #include "app/Pages/StatusBar/StatusBar.h"

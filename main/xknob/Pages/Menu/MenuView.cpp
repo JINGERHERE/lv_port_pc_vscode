@@ -37,7 +37,10 @@ void MenuView::Create(lv_obj_t* root)
 		"S-Dial",
 		"dialpad",
 
-		"Surface Dial"
+		// [移植改动] 上游此处漏了换行符，两行相邻字面量被 C++ 拼接成 "Surface DialControl\n"。
+		//            对照其余 4 个 item（均以 "\n" 结尾）可确认原意是分两行，已补上。
+		// 原: "Surface Dial"
+		"Surface Dial\n"
 		"Control\n"
 		"Your PC\n"
 		"with X-Knob\n"

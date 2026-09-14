@@ -71,12 +71,12 @@ void ResourcePool::Init()
     Font_.SetDefault((void*)&lv_font_montserrat_14);
 
     /* [移植改动] 原为 Resource_Init() 注册 5 个预生成位图字体（v9 格式不兼容）。
-     *            现改为运行时用 Tiny TTF 从 assets/bahnschrift.ttf 生成。
+     *            现改为运行时用 Tiny TTF 从 Resources/Font/bahnschrift.ttf 生成。
      * 依赖：LV_USE_TINY_TTF=1 且 LV_TINY_TTF_FILE_SUPPORT=1（已在 lv_conf.h 开启）。
      * 注意：Tiny TTF 是堆对象，必须只创建一次并常驻，不可反复创建（会泄漏）。
      */
-    lv_font_t* font13 = lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "bahnschrift.ttf", 13);
-    lv_font_t* font17 = lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "bahnschrift.ttf", 17);
+    lv_font_t* font13 = lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "Font/bahnschrift.ttf", 13);
+    lv_font_t* font17 = lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "Font/bahnschrift.ttf", 17);
 
     /* 文件缺失时 lv_tiny_ttf_create_file 返回 NULL，此处判空避免把 NULL 注册进池 */
     if (font13 != nullptr) Font_.AddResource("bahnschrift_13", font13);
@@ -87,13 +87,13 @@ void ResourcePool::Init()
      * 原: IMPORT_FONT(bahnschrift_32);
      * 原: IMPORT_FONT(bahnschrift_65);
      * 原: IMPORT_FONT(agencyb_36);
-     * 需要时放开如下写法，并确保 assets/AGENCYB.TTF 已就位：
+     * 需要时放开如下写法，并确保 Resources/Font/AGENCYB.TTF 已就位：
      *   Font_.AddResource("bahnschrift_32",
-     *       lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "bahnschrift.ttf", 32));
+     *       lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "Font/bahnschrift.ttf", 32));
      *   Font_.AddResource("bahnschrift_65",
-     *       lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "bahnschrift.ttf", 65));
+     *       lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "Font/bahnschrift.ttf", 65));
      *   Font_.AddResource("agencyb_36",
-     *       lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "AGENCYB.TTF", 36));
+     *       lv_tiny_ttf_create_file("A:" USR_ASSETS_PREFIX "Font/AGENCYB.TTF", 36));
      */
 }
 
@@ -105,6 +105,6 @@ const void* ResourcePool::GetImage(const char* name)
      * lv_image_set_src() 会对传入的路径字符串做拷贝，故使用静态缓冲是安全的。
      */
     static char path[192];
-    lv_snprintf(path, sizeof(path), "A:" USR_ASSETS_PREFIX "%s.png", name);
+    lv_snprintf(path, sizeof(path), "A:" USR_ASSETS_PREFIX "Image/%s.png", name);
     return path;
 }

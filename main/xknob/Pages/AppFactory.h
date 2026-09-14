@@ -23,7 +23,7 @@
 // [移植改动] 原工程该头无 include guard，为避免重复包含导致重定义，补 #pragma once
 #pragma once
 
-#include "app/Utils/PageManager/PageManager.h"
+#include "Utils/PageManager/PageManager.h"
 
 class AppFactory : public PageFactory
 {

@@ -1,7 +1,7 @@
 #ifndef __RESOURCE_POOL
 #define __RESOURCE_POOL
 
-#include "app/Utils/PageManager/ResourceManager.h"
+#include "Utils/PageManager/ResourceManager.h"
 #include "lvgl.h"
 
 /* [移植改动] 本文件由 X-Knob 的 app/Resources/ResourcePool.h 移植而来。
