@@ -21,6 +21,9 @@
  * SOFTWARE.
  */
 #include "Account.h"
+
+#include <cstring>
+
 #include "DataCenter.h"
 #include "DataCenterLog.h"
 
