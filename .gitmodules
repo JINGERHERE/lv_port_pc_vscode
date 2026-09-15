@@ -10,3 +10,6 @@
 [submodule "lv_demos"]
 	path = lv_demos
 	url = https://github.com/lvgl/lv_demos.git
+[submodule "x_page"]
+	path = x_page
+	url = https://github.com/JINGERHERE/X-Page.git
