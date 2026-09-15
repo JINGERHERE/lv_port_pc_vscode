@@ -74,6 +74,9 @@ target_include_directories(lvgl PUBLIC ${PROJECT_SOURCE_DIR} ${SDL2_INCLUDE_DIRS
 # 添加 lv_demos 外部演示库
 add_subdirectory(lv_demos)
 
+# 添加 x_page 库
+add_subdirectory(x_page)
+
 # Create the main executable, depending on the FreeRTOS option
 if(USE_FREERTOS)
     add_executable(main
@@ -93,14 +96,14 @@ else()
 endif()
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/main/usr_ui) # 添加 usr_ui 子目录
-add_subdirectory(${PROJECT_SOURCE_DIR}/main/xknob) # 添加 xknob 子目录
+# add_subdirectory(${PROJECT_SOURCE_DIR}/main/xknob) # 添加 xknob 子目录
 
 # Define LVGL configuration as a simple include
 target_compile_definitions(main PRIVATE LV_CONF_INCLUDE_SIMPLE)
 # target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread)
-# 链接 usr_ui xknob 库
+# 链接 usr_ui 库
 target_link_libraries(main lvgl lvgl::examples lvgl::demos lvgl::thorvg ${SDL2_LIBRARIES} m pthread lv_demos_ext
-                        usr_ui xknob)
+                        lv_demos_ext usr_ui x_page)
 
 # Only link freertos_config if the FreeRTOS directory exists
 if(USE_FREERTOS)
