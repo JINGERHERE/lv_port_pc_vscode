@@ -73,7 +73,7 @@ extern void freertos_main(void);
  *   USER INCLUDE
  **********************/
 #include "test_ui.h"
-#include "display_xknob.h"
+#include "x_page_app.h"
 
 #if !defined(_WIN32)
 int main(int argc, char** argv)
@@ -108,7 +108,7 @@ int SDL_main(int argc, char** argv)
      * 用户 UI
     ---------------------------*/
     // test_ui();
-    display_xknob();
+    XPage_Init();
 
     /*---------------------------
      * LVGL 主循环
