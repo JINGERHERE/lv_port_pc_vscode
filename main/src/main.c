@@ -90,9 +90,10 @@ int SDL_main(int argc, char** argv)
     /*Initialize the HAL (display, input devices, tick) for LVGL*/
     // hal_init(128, 32);
     // hal_init(128, 64);
+    // hal_init(120, 120);
     // hal_init(280, 456);
-    hal_init(360, 360);
-    // hal_init(720, 720);
+    // hal_init(360, 360);
+    hal_init(720, 720);
 
 #if LV_USE_OS == LV_OS_NONE
 
